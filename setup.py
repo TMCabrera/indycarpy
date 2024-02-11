@@ -2,15 +2,14 @@ from setuptools import setup, find_packages
 
 setup(
     name="indycarpy",
-    version="0.1.0",
+    version="0.1.1",
     author="Toni Cabrera",
     author_email="tonicabrera@bymat.io",
-    description="Indycar API scraper",
+    description="A Python package to scrape Indycar session data",
     url="https://github.com/TMCabrera/indycarpy",
     packages=find_packages(),
-    install_requires=[
-        # List your dependencies here
-    ],
+    keywords=["Indycar", "scraper", "motorsport"],
+    install_requires=["pandas", "requests", "tqdm", "numpy"],
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",

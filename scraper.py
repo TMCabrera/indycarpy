@@ -6,11 +6,11 @@ This is the main file for the IndyCar Scraper package.
 import json
 from datetime import datetime
 import time
+import pkg_resources
 
 # Related third-party imports
 import numpy as np
 import pandas as pd
-import pkg_resources
 import requests
 from tqdm import tqdm
 
