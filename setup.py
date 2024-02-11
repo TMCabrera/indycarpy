@@ -6,7 +6,7 @@ setup(
     author="Toni Cabrera",
     author_email="tonicabrera@bymat.io",
     description="Indycar API scraper",
-    url="",
+    url="https://github.com/TMCabrera/indycarpy",
     packages=find_packages(),
     install_requires=[
         # List your dependencies here
