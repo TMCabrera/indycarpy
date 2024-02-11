@@ -3,9 +3,9 @@ from setuptools import setup, find_packages
 setup(
     name="indycarpy",
     version="0.1.0",
-    author="Your Name",
-    author_email="your@email.com",
-    description="Description of your package",
+    author="Toni Cabrera",
+    author_email="tonicabrera@bymat.io",
+    description="Indycar API scraper",
     url="",
     packages=find_packages(),
     install_requires=[
