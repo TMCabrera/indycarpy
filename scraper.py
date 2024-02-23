@@ -144,6 +144,7 @@ def get_sessions_records(
     """
     sessions = get_sessions(from_year, to_year)
 
+    # We filter the sessions by type
     if session_type == "R":
         sessions = sessions[sessions["SessionName"].str.contains("Race")]
     elif session_type == "P":
@@ -159,6 +160,7 @@ def get_sessions_records(
         "indycarpy", "data/race_track.csv"
     )
 
+    # We read the track data
     track_df = pd.read_csv(track_data_path, sep=";")
 
     race_sessions_list = []
@@ -198,10 +200,10 @@ def get_sessions_records(
         return df_sessions
     elif data_format == "csv":
         if from_year == to_year:
-            filename = f"sessions_{from_year}"
+            filename = f"sessions_{from_year}.csv"
         else:
-            filename = f"sessions_{from_year}_{to_year}"
-        helper.df_to_csv(df_sessions, filename)
+            filename = f"sessions_{from_year}_{to_year}.csv"
+        df_sessions.to_csv(filename, index=False)
         return None
     else:
         raise ValueError("Output type must be 'csv' or 'df'.")

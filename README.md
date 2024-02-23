@@ -28,16 +28,13 @@ tqdm, and numpy.
 ## Usage
 
 ```bash
-from indycarpy import scraper
+import indycarpy
 
 # Retrieve session data between specific years
-sessions_df = scraper.get_sessions(from_year=1996, to_year=2024)
-
-# Retrieve session records for races between specific years and export to CSV
-scraper.get_sessions_records(from_year=1996, to_year=2024, session_type="R", data_format="csv")
+sessions_df = indycarpy.get_sessions_record(from_year=1996, to_year=2024, session_type="R", data_format="df")
 
 # Clean session records data
-cleaned_data = scraper.clean_sessions_records(sessions_df)
+cleaned_data = indycarpy.clean_sessions_records(sessions_df)
 ```
 
 ## Data Files

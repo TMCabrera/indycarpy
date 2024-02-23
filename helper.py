@@ -19,7 +19,7 @@ def df_to_csv(df: pd.DataFrame, filename: str) -> None:
         The filename to write to.
     """
     # We establish the output directory, and create it if it doesn't exist.
-    output_dir = "output"
+    output_dir = "indydata"
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 

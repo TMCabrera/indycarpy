@@ -1,4 +1,4 @@
 pandas >= 2.0
 requests >= 2.26.0
 tqdm >= 4.62.3
-numpy >= 1.21.2 
+numpy >= 1.21.5 
