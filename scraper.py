@@ -85,23 +85,81 @@ def get_sessions(from_year: int = 1996, to_year: int = 2024) -> pd.DataFrame:
 def get_sessions_records(
     from_year: int = 1996,
     to_year: int = 2024,
-    session_type: str = "Race",
+    session_type: str = "R",
     data_format: str = "df",
 ) -> pd.DataFrame or None:
     """
-    This function retrieves the list of races from the IndyCar API.
+    This function retrieves the list of sessions records from the IndyCar API.
+
+    Parameters
+    ----------
+    from_year : int
+        The start year.
+    to_year : int
+        The end year.
+    session_type : str
+        The session type to filter: "R", "P", "Q", "W" or "All".
+    data_format : str
+        The output format: "df" or "csv".
+
+    Returns
+    -------
+    pd.DataFrame or None
+        The DataFrame containing the sessions records. It has the following columns:
+        - BestLapTime
+        - BestSpeed
+        - BestSpeedFormatted
+        - CarNumber
+        - Difference
+        - DriverName
+        - DriverOverrideID
+        - DriversID
+        - ElapsedTime
+        - EventsEntrylistID
+        - EventsSessionsDetailsID
+        - EventsSessionsID
+        - FirstName
+        - Gap
+        - IsDeleted
+        - LapsComplete
+        - LapsDown
+        - LapsLed
+        - LastName
+        - PitStops
+        - PointsEarned
+        - PositionFinish
+        - PositionStart
+        - SpeedAvg
+        - SpeedAvgFormatted
+        - Status
+        - TimesLed
+        - EventName
+        - TrackName
+        - EventDate
+        - EventType
+        - SessionType
+        - TrackType
+        - EventID
+        - Season
     """
     sessions = get_sessions(from_year, to_year)
+
+    if session_type == "R":
+        sessions = sessions[sessions["SessionName"].str.contains("Race")]
+    elif session_type == "P":
+        sessions = sessions[sessions["SessionName"].str.contains("Practice")]
+    elif session_type == "Q":
+        sessions = sessions[sessions["SessionName"].str.contains("Qualif")]
+    elif session_type == "W":
+        sessions = sessions[sessions["SessionName"].str.contains("Warm")]
+
+    sessions_ids = sessions["SessionID"].to_list()
 
     track_data_path = pkg_resources.resource_filename(
         "indycarpy", "data/race_track.csv"
     )
 
     track_df = pd.read_csv(track_data_path, sep=";")
-
-    sessions_ids = sessions[sessions["SessionName"].str.contains(session_type)][
-        "SessionID"
-    ].to_list()
 
     race_sessions_list = []
 
@@ -139,7 +197,10 @@ def get_sessions_records(
     if data_format == "df":
         return df_sessions
     elif data_format == "csv":
-        filename = f"{session_type.lower()}_{from_year}_{to_year}"
+        if from_year == to_year:
+            filename = f"sessions_{from_year}"
+        else:
+            filename = f"sessions_{from_year}_{to_year}"
         helper.df_to_csv(df_sessions, filename)
         return None
     else:
@@ -158,6 +219,18 @@ def get_unique_drivers(df: pd.DataFrame) -> pd.DataFrame:
 def clean_sessions_records(df: pd.DataFrame, session_type: str = "R") -> pd.DataFrame:
     """
     This function cleans the data.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        The DataFrame containing the sessions records.
+    session_type : str
+        The session type to filter: "R", "P", "Q", "W" or "All".
+
+    Returns
+    -------
+    pd.DataFrame
+        The cleaned DataFrame.
     """
     # We start by renaming the columns
     df = df.rename(
@@ -209,7 +282,6 @@ def clean_sessions_records(df: pd.DataFrame, session_type: str = "R") -> pd.Data
     df.dropna(axis=1, how="all", inplace=True)
 
     # We replace the NaN values with None (for Supabase compatibility)
-    df = df.where(pd.notnull(df), None)
 
     # We drop the columns that are not needed
     df.drop(
@@ -235,14 +307,11 @@ def clean_sessions_records(df: pd.DataFrame, session_type: str = "R") -> pd.Data
     ]
     df[cols_to_int] = df[cols_to_int].fillna(0).astype(int)
 
-    # We create a new column to store the change in position between the grid and the finish
-    df["position_change"] = df["position_start"] - df["position_finish"]
+    if session_type.lower() == "r":
+        # We create a new column to store the change in position between the grid and the finish
+        df["position_change"] = df["position_start"] - df["position_finish"]
 
     # We convert columns to FLOAT type
     df["best_speed"] = df["best_speed"].astype(float)
-
-    for col in df.columns:
-        if df[col].dtype in (np.float64, np.float32):
-            df[col] = np.where(np.isnan(df[col]), None, df[col])
 
     return df
