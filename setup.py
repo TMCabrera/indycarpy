@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="indycarpy",
-    version="0.1.1",
+    version="0.0.1",
     author="Toni Cabrera",
     author_email="tonicabrera@bymat.io",
     description="A Python package to scrape Indycar session data",
