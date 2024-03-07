@@ -22,16 +22,18 @@ You can install IndyCarPy using pip:
 pip install indycarpy
 ```
 
-Make sure you have the required dependencies installed: pandas, requests,
-tqdm, and numpy.
+Make sure you have the required dependencies installed: `pandas`,
+`requests`, `tqdm`, and `numpy`.
 
 ## Usage
+
+The
 
 ```bash
 import indycarpy
 
-# Retrieve session data between specific years
-sessions_df = indycarpy.get_sessions_record(from_year=1996, to_year=2024, session_type="R", data_format="df")
+# Retrieve race session data between specific years
+indycarpy.get_sessions_records(from_year=1996, to_year=2024, session_type="R", data_format="df")
 
 # Clean session records data
 cleaned_data = indycarpy.clean_sessions_records(sessions_df)

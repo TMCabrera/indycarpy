@@ -9,13 +9,12 @@ import time
 import pkg_resources
 
 # Related third-party imports
-import numpy as np
 import pandas as pd
 import requests
 from tqdm import tqdm
 
-# Local application/library specific imports
-from . import helper
+# Importing cleaning functions
+from .cleaning import *
 
 # We define the URLS for scraping the data
 SEASON_DROP_DOWN = "https://www.indycar.com/Services/IndyStats.svc/SeasonDropDown?id=b856a4f1-e85c-4fac-8c36-fd58d962227a"
@@ -87,6 +86,7 @@ def get_sessions_records(
     to_year: int = 2024,
     session_type: str = "R",
     data_format: str = "df",
+    clean: bool = False,
 ) -> pd.DataFrame or None:
     """
     This function retrieves the list of sessions records from the IndyCar API.
@@ -196,6 +196,9 @@ def get_sessions_records(
 
     df_sessions = pd.DataFrame(race_sessions_list)
 
+    if clean:
+        df_sessions = clean_sessions_records(df_sessions, session_type)
+
     if data_format == "df":
         return df_sessions
     elif data_format == "csv":
@@ -207,113 +210,3 @@ def get_sessions_records(
         return None
     else:
         raise ValueError("Output type must be 'csv' or 'df'.")
-
-
-def get_unique_drivers(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    This function retrieves the unique drivers from
-    """
-    unique_drivers = df.groupby(["driver_name", "drivers_id"])
-
-    return unique_drivers
-
-
-def clean_sessions_records(df: pd.DataFrame, session_type: str = "R") -> pd.DataFrame:
-    """
-    This function cleans the data.
-
-    Parameters
-    ----------
-    df : pd.DataFrame
-        The DataFrame containing the sessions records.
-    session_type : str
-        The session type to filter: "R", "P", "Q", "W" or "All".
-
-    Returns
-    -------
-    pd.DataFrame
-        The cleaned DataFrame.
-    """
-    # We start by renaming the columns
-    df = df.rename(
-        {
-            "BestLapTime": "best_lap_time",
-            "BestSpeed": "best_speed",
-            "BestSpeedFormatted": "best_speed_formatted",
-            "CarNumber": "car_number",
-            "Difference": "difference",
-            "DriverName": "driver_name",
-            "DriverOverrideID": "driver_override_id",
-            "DriversID": "drivers_id",
-            "ElapsedTime": "elapsed_time",
-            "EventsEntrylistID": "events_entrylist_id",
-            "EventsSessionsDetailsID": "events_sessions_details_id",
-            "EventsSessionsID": "events_sessions_id",
-            "FirstName": "first_name",
-            "Gap": "gap",
-            "IsDeleted": "is_deleted",
-            "LapsComplete": "laps_complete",
-            "LapsDown": "laps_down",
-            "LapsLed": "laps_led",
-            "LastName": "last_name",
-            "PitStops": "pit_stops",
-            "PointsEarned": "points_earned",
-            "PositionFinish": "position_finish",
-            "PositionStart": "position_start",
-            "SpeedAvg": "speed_avg",
-            "SpeedAvgFormatted": "speed_avg_formatted",
-            "Status": "status",
-            "TimesLed": "times_led",
-            "EventName": "event_name",
-            "TrackName": "track_name",
-            "EventDate": "event_date",
-            "EventType": "event_type",
-            "SessionType": "session_type",
-            "TrackType": "track_type",
-            "EventID": "event_id",
-            "Season": "season",
-        },
-        axis=1,
-    )
-
-    # We filter the dataframe by session type
-    if session_type.lower() != "all":
-        df = df[df["session_type"] == session_type]
-
-    # We drop the columns that are completely empty
-    df.dropna(axis=1, how="all", inplace=True)
-
-    # We replace the NaN values with None (for Supabase compatibility)
-
-    # We drop the columns that are not needed
-    df.drop(
-        columns=[
-            "speed_avg_formatted",
-            "best_speed_formatted",
-            "driver_override_id",
-        ],
-        inplace=True,
-    )
-
-    # We drop the is_deleted column if it only has one unique value
-    if df["is_deleted"].nunique() == 1:
-        df.drop(columns=["is_deleted"], inplace=True)
-
-    # We convert columns to INT type
-    cols_to_int = [
-        "laps_led",
-        "times_led",
-        "position_start",
-        "position_finish",
-        "pit_stops",
-    ]
-    df[cols_to_int] = df[cols_to_int].fillna(0).astype(int)
-
-    if session_type.lower() == "r":
-        # We create a new column to store the change in position between the grid and the finish
-        df["position_change"] = df["position_start"] - df["position_finish"]
-
-    # We convert columns to FLOAT type
-    df["best_speed"] = df["best_speed"].astype(float)
-
-    return df
