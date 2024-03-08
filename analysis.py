@@ -122,9 +122,9 @@ def add_finish_percentile(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def calculate_cpi(average_finish_percentile, finish_rate):
+def calculate_rpi(average_finish_percentile, finish_rate):
     """
-    This function calculates the Consistency Performance Index (CPI) for each driver.
+    This function calculates the Race Performance Index (RPI) for each driver.
 
     Parameters
     ----------
@@ -136,16 +136,16 @@ def calculate_cpi(average_finish_percentile, finish_rate):
     Returns
     -------
     pd.Series
-        The Consistency Performance Index (CPI) for each driver.
+        The Race Performance Index (RPI) for each driver.
     """
     return hmean([average_finish_percentile, finish_rate], axis=0).round(2)
 
 
-def get_cpi_df(
+def get_rpi_df(
     df: pd.DataFrame, by_season: bool = False, drop: int = 0
 ) -> pd.DataFrame:
     """
-    This function creates a DataFrame with the Consistency Performance Index (CPI)
+    This function creates a DataFrame with the Race Performance Index (RPI)
 
     Parameters
     ----------
@@ -155,7 +155,7 @@ def get_cpi_df(
     Returns
     -------
     pd.DataFrame
-        The DataFrame with the finish percentile for each driver.
+        The DataFrame with Race Performance Index (RPI) for each driver.
     """
 
     df = add_finish_percentile(df)
@@ -193,8 +193,8 @@ def get_cpi_df(
         grouped["points_earned"] / grouped["races_completed"]
     ).round(1)
 
-    # Calculate consistency_performance_index
-    grouped["race_performance_index"] = calculate_cpi(
+    # Calculate race_performance_index
+    grouped["race_performance_index"] = calculate_rpi(
         grouped["finish_percentile_index"], grouped["adj_finish_rate"]
     )
 
@@ -230,7 +230,7 @@ def get_cpi_df(
     if drop > 0:
         grouped = grouped[grouped["races_completed"] >= drop]
 
-    # Sort the DataFrame by CPI
+    # Sort the DataFrame by RPI
     summary_df = grouped.sort_values(by="race_performance_index", ascending=False)
 
     return summary_df
