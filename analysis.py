@@ -51,7 +51,7 @@ def add_running_counts(df: pd.DataFrame) -> pd.DataFrame:
     df["running_cars"] = df["event_id"].map(running_counts)
 
     # Replace NaN values with 0
-    df["running_cars"].fillna(0, inplace=True)
+    df["running_cars"] = df["running_cars"].fillna(0)
     df["running_cars"] = df["running_cars"].astype(int)
 
     return df
@@ -122,6 +122,75 @@ def add_finish_percentile(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+def add_relative_best_lap(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    This function adds a new column to the dataframe with the relative best lap time.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        The DataFrame containing the sessions records.
+
+    Returns
+    -------
+    pd.DataFrame
+        The DataFrame with the new column 'relative_best_lap'.
+    """
+    # We find the best speed for each session
+    best_lap_time = df.groupby("events_sessions_id")["best_speed"].max()
+
+    # We add the best speed for each session to the dataframe
+    df["best_speed_session"] = df["events_sessions_id"].map(best_lap_time)
+
+    # We calculate the relative best lap time
+    df["best_lap_percentage"] = (
+        (df["best_speed"] / df["best_speed_session"]) * 100
+    ).round(2)
+
+    # We drop the best_speed_session column
+    df.drop(columns="best_speed_session", inplace=True)
+
+    return df
+
+
+def add_position_change(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    This function adds a new column to the dataframe with the position change for each driver.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        The DataFrame containing the sessions records.
+
+    Returns
+    -------
+    pd.DataFrame
+        The DataFrame with the new column 'position_change'.
+    """
+    df["position_change"] = df.apply(calculate_position_change, axis=1)
+
+    return df
+
+
+def calculate_position_change(row):
+    """
+    This function calculates the position change for each driver.
+
+    Parameters
+    ----------
+    row : pd.Series
+        The row of the DataFrame.
+
+    Returns
+    -------
+    int
+        The position change for the driver.
+    """
+    if row["session_type"] == "R":
+        change = row["position_start"] - row["position_finish"]
+        return int(change)
+
+
 def calculate_rpi(average_finish_percentile, finish_rate):
     """
     This function calculates the Race Performance Index (RPI) for each driver.
@@ -157,8 +226,12 @@ def get_rpi_df(
     pd.DataFrame
         The DataFrame with Race Performance Index (RPI) for each driver.
     """
+    # Add the finish percentile to the DataFrame if it doesn't already exist
+    if "finish_percentile" not in df.columns:
+        df = add_finish_percentile(df)
 
-    df = add_finish_percentile(df)
+    # Only take the rows where the session type is "R"
+    df = df[df["session_type"] == "R"]
 
     if by_season:
         group = ["season", "driver_name"]

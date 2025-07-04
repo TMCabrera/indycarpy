@@ -38,6 +38,7 @@ def clean_sessions_records(df: pd.DataFrame, session_type: str = "R") -> pd.Data
             "EventsSessionsID": "events_sessions_id",
             "FirstName": "first_name",
             "Gap": "gap",
+            "InLap": "in_lap",
             "IsDeleted": "is_deleted",
             "LapsComplete": "laps_complete",
             "LapsDown": "laps_down",
@@ -47,6 +48,10 @@ def clean_sessions_records(df: pd.DataFrame, session_type: str = "R") -> pd.Data
             "PointsEarned": "points_earned",
             "PositionFinish": "position_finish",
             "PositionStart": "position_start",
+            "QualLap1": "qual_lap_1",
+            "QualLap2": "qual_lap_2",
+            "QualLap3": "qual_lap_3",
+            "QualLap4": "qual_lap_4",
             "SpeedAvg": "speed_avg",
             "SpeedAvgFormatted": "speed_avg_formatted",
             "Status": "status",
@@ -70,20 +75,16 @@ def clean_sessions_records(df: pd.DataFrame, session_type: str = "R") -> pd.Data
     # We remove the trailing spaces from the status column
     df["status"] = df["status"].str.strip()
 
+    # We drop the columns that are not needed
+    columns_to_drop = [
+        "speed_avg_formatted",
+        "best_speed_formatted",
+        "driver_override_id",
+    ]
+    df = df.drop(columns=[col for col in columns_to_drop if col in df.columns])
+
     # We drop the columns that are completely empty
     df.dropna(axis=1, how="all", inplace=True)
-
-    # We replace the NaN values with None (for Supabase compatibility)
-
-    # We drop the columns that are not needed
-    df.drop(
-        columns=[
-            "speed_avg_formatted",
-            "best_speed_formatted",
-            "driver_override_id",
-        ],
-        inplace=True,
-    )
 
     # We drop the is_deleted column if it only has one unique value
     if df["is_deleted"].nunique() == 1:
@@ -97,11 +98,9 @@ def clean_sessions_records(df: pd.DataFrame, session_type: str = "R") -> pd.Data
         "position_finish",
         "pit_stops",
     ]
-    df[cols_to_int] = df[cols_to_int].fillna(0).astype(int)
-
-    if session_type.lower() == "r":
-        # We create a new column to store the change in position between the grid and the finish
-        df["position_change"] = df["position_start"] - df["position_finish"]
+    cols_to_int = [col for col in cols_to_int if col in df.columns]
+    if cols_to_int:
+        df[cols_to_int] = df[cols_to_int].fillna(0).astype(int)
 
     # We convert columns to FLOAT type
     df["best_speed"] = df["best_speed"].astype(float)
