@@ -83,7 +83,7 @@ def get_sessions(from_year: int = 1996, to_year: int = 2024) -> pd.DataFrame:
 
 def get_sessions_records(
     from_year: int = 1996,
-    to_year: int = 2024,
+    to_year: int = 2025,
     session_type: str = "R",
     data_format: str = "df",
     clean: bool = False,
@@ -100,7 +100,7 @@ def get_sessions_records(
     session_type : str
         The session type to filter: "R", "P", "Q", "W" or "All".
     data_format : str
-        The output format: "df" or "csv".
+        The output format: "df", "json" or "csv".
 
     Returns
     -------
@@ -154,7 +154,7 @@ def get_sessions_records(
     elif session_type == "W":
         sessions = sessions[sessions["SessionName"].str.contains("Warm")]
 
-    sessions_ids = sessions["SessionID"].to_list()
+    sessions_ids = list(zip(sessions["SessionID"], sessions["EventID"]))
 
     track_data_path = pkg_resources.resource_filename(
         "indycarpy", "data/race_track.csv"
@@ -165,9 +165,9 @@ def get_sessions_records(
 
     race_sessions_list = []
 
-    for event_id in tqdm(sessions_ids):
+    for session_id, event_id in tqdm(sessions_ids):
         time.sleep(0.2)
-        response = s.get(EVENTS_SESSION_URL.format(event_id))
+        response = s.get(EVENTS_SESSION_URL.format(session_id))
         races_sessions = json.loads(response.content.decode("utf-8"))
 
         event_name = races_sessions["EventName"]
@@ -208,5 +208,12 @@ def get_sessions_records(
             filename = f"sessions_{from_year}_{to_year}.csv"
         df_sessions.to_csv(filename, index=False)
         return None
+    elif data_format == "json":
+        if from_year == to_year:
+            filename = f"sessions_{from_year}.json"
+        else:
+            filename = f"sessions_{from_year}_{to_year}.json"
+        df_sessions.to_json(filename, orient="records", lines=True)
+        return None
     else:
-        raise ValueError("Output type must be 'csv' or 'df'.")
+        raise ValueError("Output type must be 'csv', 'json' or 'df'.")
