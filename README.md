@@ -27,8 +27,6 @@ Make sure you have the required dependencies installed: `pandas`,
 
 ## Usage
 
-The
-
 ```bash
 import indycarpy
 
